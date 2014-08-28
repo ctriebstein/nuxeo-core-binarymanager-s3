@@ -251,6 +251,12 @@ public class S3BinaryManager extends BinaryCachingManager {
                     encryptionMaterials, clientConfiguration,
                     cryptoConfiguration);
         }
+        
+        log.info("Endpoint: " + endpoint);
+        if (isNotBlank(endpoint)) {
+            amazonS3.setEndpoint(endpoint);
+        }
+        
         try {
             if (!amazonS3.doesBucketExist(bucketName)) {
                 amazonS3.createBucket(bucketName, bucketRegion);
@@ -261,11 +267,7 @@ public class S3BinaryManager extends BinaryCachingManager {
             throw new IOException(e);
         } catch (AmazonClientException e) {
             throw new IOException(e);
-        }
-        
-        if (isNotBlank(endpoint)) {
-            amazonS3.setEndpoint(endpoint);
-        }
+        }                
 
         // Create file cache
         File dir = File.createTempFile("nxbincache.", "", null);
