@@ -102,6 +102,8 @@ public class S3BinaryManager extends CachingBinaryManager {
     public static final String PRIVKEY_ALIAS_KEY = "nuxeo.s3storage.crypt.key.alias";
 
     public static final String PRIVKEY_PASS_KEY = "nuxeo.s3storage.crypt.key.password";
+	
+	public static final String ENDPOINT_KEY = "nuxeo.s3storage.endpoint";
 
     // TODO define these constants globally somewhere
     public static final String PROXY_HOST_KEY = "nuxeo.http.proxy.host";
@@ -167,6 +169,7 @@ public class S3BinaryManager extends CachingBinaryManager {
         String keystorePass = Framework.getProperty(KEYSTORE_PASS_KEY);
         String privkeyAlias = Framework.getProperty(PRIVKEY_ALIAS_KEY);
         String privkeyPass = Framework.getProperty(PRIVKEY_PASS_KEY);
+		String endpoint = Framework.getProperty(ENDPOINT_KEY);
 
         // Fallback on default env keys for ID and secret
         if (isBlank(awsID)) {
@@ -269,6 +272,10 @@ public class S3BinaryManager extends CachingBinaryManager {
                     encryptionMaterials, clientConfiguration,
                     cryptoConfiguration);
         }
+		if (isNotBlank(endpoint)) {
+			amazonS3.setEndpoint(endpoint);
+		}
+
         try {
             if (!amazonS3.doesBucketExist(bucketName)) {
                 amazonS3.createBucket(bucketName, bucketRegion);
