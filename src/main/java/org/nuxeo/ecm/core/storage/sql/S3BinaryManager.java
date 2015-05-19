@@ -34,6 +34,7 @@ import java.util.regex.Pattern;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.commons.io.FileDeleteStrategy;
 import org.nuxeo.common.utils.SizeUtils;
 import org.nuxeo.runtime.api.Framework;
 
@@ -93,6 +94,8 @@ public class S3BinaryManager extends BinaryCachingManager {
     public static final String PRIVKEY_ALIAS_KEY = "nuxeo.s3storage.crypt.key.alias";
 
     public static final String PRIVKEY_PASS_KEY = "nuxeo.s3storage.crypt.key.password";
+    
+    public static final String ENDPOINT_KEY = "nuxeo.s3storage.endpoint";
 
     // TODO define these constants globally somewhere
     public static final String PROXY_HOST_KEY = "nuxeo.http.proxy.host";
@@ -105,7 +108,7 @@ public class S3BinaryManager extends BinaryCachingManager {
 
     private static final String MD5 = "MD5"; // must be MD5 for Etag
 
-    private static final Pattern MD5_RE = Pattern.compile("[0-9a-f]{32}");
+    private static final Pattern MD5_RE = Pattern.compile("(.*/)?[0-9a-f]{32}");
 
     protected String bucketName;
 
@@ -155,6 +158,7 @@ public class S3BinaryManager extends BinaryCachingManager {
         String keystorePass = Framework.getProperty(KEYSTORE_PASS_KEY);
         String privkeyAlias = Framework.getProperty(PRIVKEY_ALIAS_KEY);
         String privkeyPass = Framework.getProperty(PRIVKEY_PASS_KEY);
+        String endpoint = Framework.getProperty(ENDPOINT_KEY);
 
         // Fallback on default env keys for ID and secret
         if (isBlank(awsID)) {
@@ -245,6 +249,11 @@ public class S3BinaryManager extends BinaryCachingManager {
                     encryptionMaterials, clientConfiguration,
                     cryptoConfiguration);
         }
+        
+        if (isNotBlank(endpoint)) {
+            amazonS3.setEndpoint(endpoint);
+        }
+        
         try {
             if (!amazonS3.doesBucketExist(bucketName)) {
                 amazonS3.createBucket(bucketName, bucketRegion);
@@ -261,7 +270,7 @@ public class S3BinaryManager extends BinaryCachingManager {
         File dir = File.createTempFile("nxbincache.", "", null);
         dir.delete();
         dir.mkdir();
-        dir.deleteOnExit();
+        Framework.trackFile(dir, dir, FileDeleteStrategy.FORCE);
         long cacheSize = SizeUtils.parseSizeInBytes(cacheSizeStr);
         fileCache = new S3BinaryFileCache(dir, cacheSize);
         log.info("Using binary cache directory: " + dir.getPath() + " size: "
