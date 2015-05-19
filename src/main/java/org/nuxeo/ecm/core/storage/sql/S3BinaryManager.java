@@ -34,6 +34,7 @@ import java.util.regex.Pattern;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.commons.io.FileDeleteStrategy;
 import org.nuxeo.common.utils.SizeUtils;
 import org.nuxeo.runtime.api.Framework;
 
@@ -116,7 +117,7 @@ public class S3BinaryManager extends CachingBinaryManager {
 
     private static final String MD5 = "MD5"; // must be MD5 for Etag
 
-    private static final Pattern MD5_RE = Pattern.compile("[0-9a-f]{32}");
+    private static final Pattern MD5_RE = Pattern.compile("(.*/)?[0-9a-f]{32}");
 
     protected String bucketName;
 
@@ -292,7 +293,7 @@ public class S3BinaryManager extends CachingBinaryManager {
         File dir = File.createTempFile("nxbincache.", "", null);
         dir.delete();
         dir.mkdir();
-        dir.deleteOnExit();
+        Framework.trackFile(dir, dir, FileDeleteStrategy.FORCE);
         long cacheSize = SizeUtils.parseSizeInBytes(cacheSizeStr);
         initializeCache(dir, cacheSize, newFileStorage());
         log.info("Using binary cache directory: " + dir.getPath() + " size: "
